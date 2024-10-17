@@ -27,7 +27,7 @@ function displayNextImagePair() {
 
 function handleImageClick() {
     const clickTime = performance.now();
-    const responseTime = clickTime - imageLoadTime;
+    const responseTime = (clickTime - imageLoadTime) / 1000; // 밀리세컨 -> 세컨
     const [leftSrc, rightSrc] = imagePairs[currentPairIndex];
     responseTimes.push({
         responseTime,
@@ -55,33 +55,42 @@ function saveResults() {
 }
 
 // complete.html에서 CSV 다운로드 버튼 처리
-if (window.location.pathname.includes('complete.html')) {
-    // localStorage에서 데이터를 불러오기
-    const storedData = localStorage.getItem('responseTimes');
-    const responseTimes = storedData ? JSON.parse(storedData) : [];
+window.addEventListener('DOMContentLoaded', function() {
+    // complete.html에서 CSV 다운로드 버튼 처리
+    if (window.location.pathname.includes('complete.html')) {
+        // localStorage에서 데이터를 불러오기
+        const storedData = localStorage.getItem('responseTimes');
+        const responseTimes = storedData ? JSON.parse(storedData) : [];
 
-    // CSV 다운로드 버튼이 클릭될 때의 동작
-    document.getElementById('downloadCsvBtn').addEventListener('click', function() {
-        // CSV 형식으로 변환
-        const csvContent = convertToCSV(responseTimes);
+        // 데이터가 제대로 로드되었는지 로그 확인
+        console.log("Loaded responseTimes:", responseTimes);
 
-        // Blob 객체 생성 (텍스트 데이터로 CSV 파일 구성)
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        // CSV 다운로드 버튼 찾기
+        const downloadBtn = document.getElementById('downloadCsvBtn');
 
-        // 다운로드 링크 생성
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", "response_times.csv");
-        document.body.appendChild(link);
+        // 버튼에 이벤트 리스너 등록 (if-else 없이)
+        downloadBtn.addEventListener('click', function() {
+            // CSV 형식으로 변환
+            const csvContent = convertToCSV(responseTimes);
 
-        // 링크 클릭하여 다운로드
-        link.click();
+            // Blob 객체 생성 (텍스트 데이터로 CSV 파일 구성)
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
 
-        // 다운로드 후 링크 제거
-        document.body.removeChild(link);
-    });
-}
+            // 다운로드 링크 생성
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "response_times.csv");
+            document.body.appendChild(link);
+
+            // 링크 클릭하여 다운로드
+            link.click();
+
+            // 다운로드 후 링크 제거
+            document.body.removeChild(link);
+        });
+    }
+});
 
 // 데이터를 CSV 형식으로 변환하는 함수
 function convertToCSV(data) {
