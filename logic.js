@@ -27,7 +27,7 @@ function displayNextImagePair() {
 
 function handleImageClick() {
     const clickTime = performance.now();
-    const responseTime = (clickTime - imageLoadTime) / 1000; // 밀리세컨 -> 세컨
+    const responseTime = (clickTime - imageLoadTime) / 1000;
     const [leftSrc, rightSrc] = imagePairs[currentPairIndex];
     responseTimes.push({
         responseTime,
@@ -39,14 +39,12 @@ function handleImageClick() {
         currentPairIndex++;
         displayNextImagePair();
     } else {
-        saveResults();
+        localStorage.setItem('responseTimes', JSON.stringify(responseTimes));
+        window.location.href = 'complete.html'
     }
 }
 
 function saveResults() {
-    // 결과가 저장될 수 있는 로직을 추가할 수 있습니다.
-    console.log("Responses saved: ", responseTimes);
-
     // 데이터를 LocalStorage에 저장한 후에 페이지 이동
     localStorage.setItem('reponseTimes', JSON.stringify(responseTimes));
     
@@ -56,21 +54,14 @@ function saveResults() {
 
 // complete.html에서 CSV 다운로드 버튼 처리
 window.addEventListener('DOMContentLoaded', function() {
-    // complete.html에서 CSV 다운로드 버튼 처리
     if (window.location.pathname.includes('complete.html')) {
         // localStorage에서 데이터를 불러오기
         const storedData = localStorage.getItem('responseTimes');
         const responseTimes = storedData ? JSON.parse(storedData) : [];
 
-        // 데이터가 제대로 로드되었는지 로그 확인
-        console.log("Loaded responseTimes:", responseTimes);
-
-        // CSV 다운로드 버튼 찾기
-        const downloadBtn = document.getElementById('downloadCsvBtn');
-
-        // 버튼에 이벤트 리스너 등록 (if-else 없이)
-        downloadBtn.addEventListener('click', function() {
-            // CSV 형식으로 변환
+        // CSV 다운로드 버튼 처리
+        document.getElementById('downloadCsvBtn').addEventListener('click', function() {
+            // CSV로 변환
             const csvContent = convertToCSV(responseTimes);
 
             // Blob 객체 생성 (텍스트 데이터로 CSV 파일 구성)
@@ -94,8 +85,12 @@ window.addEventListener('DOMContentLoaded', function() {
 
 // 데이터를 CSV 형식으로 변환하는 함수
 function convertToCSV(data) {
-    const headers = ['Response Time (ms)', 'Left Image', 'Right Image'];
-    const rows = data.map(item => [item.responseTime, item.leftImage, item.rightImage]);
+    const headers = ['Response Time(s)', 'Left Image', 'Right Image'];
+    const rows = data.map(item => [
+        item.responseTime.toFixed(3),
+        item.leftImage,
+        item.rightImage
+    ]);
 
     // CSV 포맷으로 변환
     let csvContent = headers.join(",") + "\n";
